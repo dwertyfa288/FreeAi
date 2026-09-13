@@ -1,0 +1,17 @@
+[plugin]
+id = "dwertyfa-free-ai"
+name = "FreeAI"
+version = "0.1.0"
+description = "Автоматически выбирает стабильный маршрут для выбранной модели"
+author = "dwertyfa"
+license = "MIT"
+icon = "icon.svg"
+
+[entry]
+command = "node"
+args = ["dist/index.js"]
+runtimes = ["node"]
+
+[capabilities]
+ai_provider = true
+ui_contributions = true
