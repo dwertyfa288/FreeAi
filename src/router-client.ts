@@ -1,5 +1,6 @@
 import { parseSse } from "./sse.js";
 import type { PublicModel, RouterCompletionRequest, RouterEvent } from "./types.js";
+import { MaintenanceModeError } from "./user-errors.js";
 
 type FetchFunction = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
@@ -38,6 +39,14 @@ export class RouterClient {
     if (!response.ok) {
       let errorBody = "";
       try { errorBody = await response.text(); } catch {}
+      if (response.status === 503) {
+        try {
+          const payload = JSON.parse(errorBody) as { code?: unknown };
+          if (payload.code === "MAINTENANCE_MODE") throw new MaintenanceModeError();
+        } catch (error) {
+          if (error instanceof MaintenanceModeError) throw error;
+        }
+      }
       throw new Error(`FreeAI completion request failed: ${response.status} ${errorBody}`);
     }
     if (!response.headers.get("content-type")?.includes("text/event-stream") || !response.body) {

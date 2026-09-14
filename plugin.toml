@@ -1,7 +1,7 @@
 [plugin]
 id = "dwertyfa-free-ai"
 name = "FreeAI"
-version = "0.1.0"
+version = "0.1.1"
 description = "Автоматически выбирает стабильный маршрут для выбранной модели"
 author = "dwertyfa"
 license = "MIT"

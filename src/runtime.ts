@@ -6,6 +6,7 @@ import { loadDeployment } from "./deployment.js";
 import { RouterClient } from "./router-client.js";
 import { PluginStateStore } from "./state.js";
 import type { PublicModel, RouterEvent } from "./types.js";
+import { toUserFacingError } from "./user-errors.js";
 
 export interface RuntimePublicState {
   selectedModelId: string;
@@ -45,8 +46,9 @@ export class FreeAiRuntime {
       });
       this.lastError = "";
     } catch (error) {
-      this.lastError = error instanceof Error ? error.message : "FreeAI request failed";
-      throw error;
+      const userError = toUserFacingError(error);
+      this.lastError = userError.message;
+      throw userError;
     } finally {
       this.activeRequests.delete(controller);
     }
