@@ -6,3 +6,4 @@ freeai-state.json
 freeai-state.json.tmp-*
 *.astraplugin
 *.tsbuildinfo
+tests/
