@@ -3,6 +3,11 @@ export interface ModelOption {
   name: string;
 }
 
+export interface ModelPickerOptions {
+  allowEmpty?: boolean;
+  emptyLabel?: string;
+}
+
 function requiredElement<T extends Element>(root: HTMLElement, selector: string): T {
   const element = root.querySelector<T>(selector);
   if (!element) throw new Error(`Model picker element is missing: ${selector}`);
@@ -15,10 +20,17 @@ export class ModelPicker {
   private readonly menu: HTMLElement;
   private readonly search: HTMLInputElement;
   private readonly optionsElement: HTMLElement;
+  private readonly allowEmpty: boolean;
+  private readonly emptyLabel: string;
   private models: ModelOption[] = [];
   private selectedId = "";
 
-  constructor(private readonly root: HTMLElement) {
+  constructor(
+    private readonly root: HTMLElement,
+    options: ModelPickerOptions = {},
+  ) {
+    this.allowEmpty = options.allowEmpty ?? false;
+    this.emptyLabel = options.emptyLabel ?? "Автоматически";
     this.trigger = requiredElement(root, "[data-picker-trigger]");
     this.valueElement = requiredElement(root, "[data-picker-value]");
     this.menu = requiredElement(root, "[data-picker-menu]");
@@ -49,7 +61,11 @@ export class ModelPicker {
 
   setModels(models: ModelOption[], selectedId: string): void {
     this.models = models;
-    this.selectedId = models.some((model) => model.id === selectedId) ? selectedId : models[0]?.id ?? "";
+    this.selectedId = models.some((model) => model.id === selectedId) || (this.allowEmpty && selectedId === "")
+      ? selectedId
+      : this.allowEmpty
+        ? ""
+        : models[0]?.id ?? "";
     this.updateValue();
     this.renderOptions();
   }
@@ -59,6 +75,7 @@ export class ModelPicker {
   }
 
   get selectedName(): string {
+    if (this.selectedId === "" && this.allowEmpty) return this.emptyLabel;
     return this.models.find((model) => model.id === this.selectedId)?.name ?? "";
   }
 
@@ -112,6 +129,25 @@ export class ModelPicker {
       }
       return option;
     });
+    if (this.allowEmpty) {
+      const auto = document.createElement("button");
+      auto.type = "button";
+      auto.className = "model-option";
+      auto.dataset.modelId = "";
+      auto.setAttribute("role", "option");
+      auto.setAttribute("aria-selected", String(this.selectedId === ""));
+
+      const name = document.createElement("span");
+      name.textContent = this.emptyLabel;
+      auto.append(name);
+      if (this.selectedId === "") {
+        const check = document.createElement("span");
+        check.className = "model-check";
+        check.textContent = "✓";
+        auto.append(check);
+      }
+      options.unshift(auto);
+    }
     if (options.length === 0) {
       const empty = document.createElement("p");
       empty.className = "model-empty";

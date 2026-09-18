@@ -4,9 +4,19 @@ interface AstraBridge {
   callBackend(method: string, params: Record<string, unknown>): Promise<unknown>;
 }
 
+interface PublicModel {
+  id: string;
+  name: string;
+  kind: string;
+}
+
 interface UiState {
   selectedModelId: string;
-  models: Array<{ id: string; name: string }>;
+  imageModelId: string;
+  videoModelId: string;
+  models: PublicModel[];
+  imageModels: PublicModel[];
+  videoModels: PublicModel[];
   connected: boolean;
   lastRoute: { providerName: string; modelId: string; substituted: boolean } | null;
   lastError: string;
@@ -37,7 +47,9 @@ async function call(method: string, params: Record<string, unknown> = {}): Promi
 }
 
 let toastTimer = 0;
-let modelPicker: ModelPicker;
+let chatPicker: ModelPicker;
+let imagePicker: ModelPicker;
+let videoPicker: ModelPicker;
 
 function showToast(message: string, bad = false) {
   const { toast } = getElements();
@@ -47,12 +59,21 @@ function showToast(message: string, bad = false) {
   toastTimer = window.setTimeout(() => { toast.className = 'toast'; }, 3000);
 }
 
+function toModelOption(model: PublicModel): { id: string; name: string } {
+  return { id: model.id, name: model.name };
+}
+
 function render(state: UiState): void {
   const { status, availability, route, error } = getElements();
   status.textContent = state.connected ? "Онлайн" : "Нет связи";
   status.className = state.connected ? "badge ok" : "badge";
-  modelPicker.setModels(state.models, state.selectedModelId);
-  availability.textContent = state.models.length ? "Список обновляется автоматически" : "Доступных моделей нет";
+  chatPicker.setModels(state.models.map(toModelOption), state.selectedModelId);
+  imagePicker.setModels(state.imageModels.map(toModelOption), state.imageModelId);
+  videoPicker.setModels(state.videoModels.map(toModelOption), state.videoModelId);
+  availability.textContent =
+    state.models.length || state.imageModels.length || state.videoModels.length
+      ? "Список обновляется автоматически"
+      : "Доступных моделей нет";
   route.textContent = state.lastRoute
     ? state.models.find((model) => model.id === state.lastRoute?.modelId)?.name ?? state.lastRoute.modelId
     : "Пока нет завершённых запросов";
@@ -73,11 +94,26 @@ async function run(method: string, params: Record<string, unknown> = {}, success
 }
 
 function init() {
-  modelPicker = new ModelPicker(document.querySelector<HTMLElement>("#model-picker")!);
+  chatPicker = new ModelPicker(document.querySelector<HTMLElement>("#chat-picker")!);
+  imagePicker = new ModelPicker(document.querySelector<HTMLElement>("#image-picker")!, {
+    allowEmpty: true,
+    emptyLabel: "Автоматически",
+  });
+  videoPicker = new ModelPicker(document.querySelector<HTMLElement>("#video-picker")!, {
+    allowEmpty: true,
+    emptyLabel: "Автоматически",
+  });
+
   document.querySelector("#refresh")!.addEventListener("click", () => { void run("refreshModels", {}, "Модели обновлены"); });
-  document.querySelector("#save")!.addEventListener("click", () => {
-    if (!modelPicker.value) return;
-    void run("selectModel", { modelId: modelPicker.value }, `Выбрана модель: ${modelPicker.selectedName}`);
+  document.querySelector("#save-chat")!.addEventListener("click", () => {
+    if (!chatPicker.value) return;
+    void run("selectModel", { modelId: chatPicker.value }, `Выбрана модель: ${chatPicker.selectedName}`);
+  });
+  document.querySelector("#save-image")!.addEventListener("click", () => {
+    void run("selectImageModel", { modelId: imagePicker.value }, imagePicker.value ? "Модель изображений выбрана" : "Выбор модели изображений снят");
+  });
+  document.querySelector("#save-video")!.addEventListener("click", () => {
+    void run("selectVideoModel", { modelId: videoPicker.value }, videoPicker.value ? "Модель видео выбрана" : "Выбор модели видео снят");
   });
   document.querySelector("#test")!.addEventListener("click", () => { void run("testConnection", {}, "Сервер доступен"); });
   void run("getState").then(() => { void run("refreshModels"); });

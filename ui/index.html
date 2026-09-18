@@ -12,16 +12,16 @@
       <header>
         <div>
           <p class="eyebrow">FreeAI</p>
-          <h1>Выбор модели</h1>
+          <h1>Выбор моделей</h1>
           <p class="subtitle">Сервер автоматически выберет стабильного провайдера</p>
         </div>
         <span id="status" class="badge">Проверка…</span>
       </header>
       <section class="card model-card">
-        <label id="model-label">Модель</label>
-        <div id="model-picker" class="model-picker">
-          <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="model-label model-value">
-            <span id="model-value" class="model-value" data-picker-value>Выберите модель</span>
+        <label id="chat-label">Модель для чата</label>
+        <div id="chat-picker" class="model-picker">
+          <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="chat-label chat-value">
+            <span id="chat-value" class="model-value" data-picker-value>Выберите модель</span>
             <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5.5 7.5 4.5 4.5 4.5-4.5"/></svg>
           </button>
           <div class="model-menu" data-picker-menu hidden>
@@ -29,15 +29,53 @@
               <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5"/><path d="m12.2 12.2 3.3 3.3"/></svg>
               <input type="search" data-picker-search placeholder="Найти модель" autocomplete="off" spellcheck="false" />
             </div>
-            <div class="model-options" data-picker-options role="listbox" aria-labelledby="model-label"></div>
+            <div class="model-options" data-picker-options role="listbox" aria-labelledby="chat-label"></div>
           </div>
         </div>
-        <div class="actions"><button id="refresh" class="ghost">Обновить</button><button id="save">Выбрать</button></div>
-        <p id="availability" class="muted"></p>
+        <div class="actions"><button id="save-chat">Выбрать</button></div>
+      </section>
+      <section class="card model-card">
+        <label id="image-label">Модель для изображений</label>
+        <div id="image-picker" class="model-picker">
+          <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="image-label image-value">
+            <span id="image-value" class="model-value" data-picker-value>Выберите модель</span>
+            <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5.5 7.5 4.5 4.5 4.5-4.5"/></svg>
+          </button>
+          <div class="model-menu" data-picker-menu hidden>
+            <div class="search-field">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5"/><path d="m12.2 12.2 3.3 3.3"/></svg>
+              <input type="search" data-picker-search placeholder="Найти модель" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="model-options" data-picker-options role="listbox" aria-labelledby="image-label"></div>
+          </div>
+        </div>
+        <div class="actions"><button id="save-image">Выбрать</button></div>
+      </section>
+      <section class="card model-card">
+        <label id="video-label">Модель для видео</label>
+        <div id="video-picker" class="model-picker">
+          <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="video-label video-value">
+            <span id="video-value" class="model-value" data-picker-value>Выберите модель</span>
+            <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5.5 7.5 4.5 4.5 4.5-4.5"/></svg>
+          </button>
+          <div class="model-menu" data-picker-menu hidden>
+            <div class="search-field">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5"/><path d="m12.2 12.2 3.3 3.3"/></svg>
+              <input type="search" data-picker-search placeholder="Найти модель" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="model-options" data-picker-options role="listbox" aria-labelledby="video-label"></div>
+          </div>
+        </div>
+        <div class="actions"><button id="save-video">Выбрать</button></div>
+      </section>
+      <section class="card compact">
+        <h2>Новый матч: модели</h2>
+        <div class="actions"><button id="refresh" class="ghost">Обновить</button></div>
       </section>
       <section class="card compact">
         <h2>Последний маршрут</h2>
         <p id="route" class="muted">Пока нет завершённых запросов</p>
+        <p id="availability" class="muted"></p>
         <button id="test" class="ghost">Проверить сервер</button>
       </section>
       <p id="error" class="error"></p>
