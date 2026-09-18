@@ -4,31 +4,66 @@ import { dirname } from "node:path";
 
 export interface PluginState {
   selectedModelId: string;
+  imageModelId: string;
+  videoModelId: string;
+}
+
+export interface PluginStateUpdate {
+  selectedModelId?: string;
+  imageModelId?: string;
+  videoModelId?: string;
 }
 
 export class PluginStateStore {
   constructor(private readonly path: string) {}
 
+  private static readString(value: unknown): string {
+    return typeof value === "string" ? value : "";
+  }
+
   async load(): Promise<PluginState> {
     try {
       const parsed = JSON.parse(await readFile(this.path, "utf8")) as Record<string, unknown>;
-      return { selectedModelId: typeof parsed.selectedModelId === "string" ? parsed.selectedModelId : "" };
+      return {
+        selectedModelId: PluginStateStore.readString(parsed.selectedModelId),
+        imageModelId: PluginStateStore.readString(parsed.imageModelId),
+        videoModelId: PluginStateStore.readString(parsed.videoModelId),
+      };
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { selectedModelId: "" };
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { selectedModelId: "", imageModelId: "", videoModelId: "" };
       throw new Error("FreeAI state is invalid");
     }
   }
 
-  async selectModel(selectedModelId: string): Promise<void> {
-    if (!selectedModelId.trim()) throw new Error("Model id is required");
+  private async persist(update: PluginStateUpdate): Promise<PluginState> {
+    const current = await this.load();
+    const next: PluginState = {
+      selectedModelId: update.selectedModelId ?? current.selectedModelId,
+      imageModelId: update.imageModelId ?? current.imageModelId,
+      videoModelId: update.videoModelId ?? current.videoModelId,
+    };
     await mkdir(dirname(this.path), { recursive: true });
     const temporaryPath = `${this.path}.tmp-${process.pid}-${randomUUID()}`;
     try {
-      await writeFile(temporaryPath, JSON.stringify({ selectedModelId }), { encoding: "utf8", mode: 0o600 });
+      await writeFile(temporaryPath, JSON.stringify(next), { encoding: "utf8", mode: 0o600 });
       await rename(temporaryPath, this.path);
     } catch (error) {
       await unlink(temporaryPath).catch(() => undefined);
       throw error;
     }
+    return next;
+  }
+
+  async selectModel(selectedModelId: string): Promise<PluginState> {
+    if (!selectedModelId.trim()) throw new Error("Model id is required");
+    return this.persist({ selectedModelId });
+  }
+
+  async selectImageModel(imageModelId: string): Promise<PluginState> {
+    return this.persist({ imageModelId });
+  }
+
+  async selectVideoModel(videoModelId: string): Promise<PluginState> {
+    return this.persist({ videoModelId });
   }
 }

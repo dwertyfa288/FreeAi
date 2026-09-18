@@ -1,8 +1,8 @@
 [plugin]
 id = "dwertyfa-free-ai"
 name = "FreeAI"
-version = "0.1.1"
-description = "Автоматически выбирает стабильный маршрут для выбранной модели"
+version = "0.2.0"
+description = "Автоматический роутинг моделей: чат, генерация изображений и видео"
 author = "dwertyfa"
 license = "MIT"
 icon = "icon.svg"
@@ -14,4 +14,5 @@ runtimes = ["node"]
 
 [capabilities]
 ai_provider = true
+tools = true
 ui_contributions = true

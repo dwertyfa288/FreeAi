@@ -1,7 +1,20 @@
+export type ModelKind = "text" | "image" | "video";
+
 export interface PublicModel {
   id: string;
   name: string;
   routeCount: number;
+  kind: ModelKind;
+}
+
+export type GenerationKind = Exclude<ModelKind, "text">;
+
+export interface GenerationResult {
+  assets: Array<{ url?: string; base64?: string }>;
+  providerName: string;
+  publicModelId: string;
+  upstreamModelId: string;
+  substituted: boolean;
 }
 
 export interface RouterMessage {

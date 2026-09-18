@@ -5,12 +5,16 @@ import { addAutomaticModel, automaticModelId } from "./automatic-model.js";
 import { loadDeployment } from "./deployment.js";
 import { RouterClient } from "./router-client.js";
 import { PluginStateStore } from "./state.js";
-import type { PublicModel, RouterEvent } from "./types.js";
+import type { GenerationKind, GenerationResult, PublicModel, RouterEvent } from "./types.js";
 import { toUserFacingError } from "./user-errors.js";
 
 export interface RuntimePublicState {
   selectedModelId: string;
+  imageModelId: string;
+  videoModelId: string;
   models: Array<Pick<PublicModel, "id" | "name">>;
+  imageModels: Array<Pick<PublicModel, "id" | "name">>;
+  videoModels: Array<Pick<PublicModel, "id" | "name">>;
   connected: boolean;
   lastRoute: Extract<RouterEvent, { type: "route" }> | null;
   lastError: string;
@@ -54,11 +58,40 @@ export class FreeAiRuntime {
     }
   }
 
+  async generate(kind: GenerationKind, input: { prompt: string; n?: number; size?: string; durationSeconds?: number }): Promise<GenerationResult> {
+    const state = await this.state.load();
+    const controller = new AbortController();
+    this.activeRequests.add(controller);
+    try {
+      const model = kind === "image" ? state.imageModelId : state.videoModelId;
+      const result = await this.client.generate(kind, { ...input, model: model.trim() ? model : undefined }, controller.signal);
+      if (result.assets.length === 0) throw new Error("Сервер не вернул результат генерации");
+      this.lastRoute = { type: "route", providerName: result.providerName, modelId: result.publicModelId, substituted: result.substituted };
+      this.lastError = "";
+      return result;
+    } catch (error) {
+      const userError = toUserFacingError(error);
+      this.lastError = userError.message;
+      throw userError;
+    } finally {
+      this.activeRequests.delete(controller);
+    }
+  }
+
   async refreshModels(): Promise<RuntimePublicState> {
     this.models = addAutomaticModel(await this.client.listModels());
     const state = await this.state.load();
-    if (this.models.length > 0 && !this.models.some((model) => model.id === state.selectedModelId)) {
+    const textModels = this.models.filter((model) => model.kind === undefined || model.kind === "text");
+    const imageModels = this.models.filter((model) => model.kind === "image");
+    const videoModels = this.models.filter((model) => model.kind === "video");
+    if (textModels.length > 0 && !textModels.some((model) => model.id === state.selectedModelId)) {
       await this.state.selectModel(automaticModelId);
+    }
+    if (imageModels.length > 0 && state.imageModelId.trim() && !imageModels.some((model) => model.id === state.imageModelId)) {
+      await this.state.selectImageModel("");
+    }
+    if (videoModels.length > 0 && state.videoModelId.trim() && !videoModels.some((model) => model.id === state.videoModelId)) {
+      await this.state.selectVideoModel("");
     }
     this.lastError = "";
     return this.publicState();
@@ -78,6 +111,20 @@ export class FreeAiRuntime {
     return this.publicState();
   }
 
+  async selectImageModel(modelId: string): Promise<RuntimePublicState> {
+    if (this.models.length === 0) await this.refreshModels();
+    if (modelId && !this.models.some((model) => model.kind === "image" && model.id === modelId)) throw new Error("Модель недоступна");
+    await this.state.selectImageModel(modelId);
+    return this.publicState();
+  }
+
+  async selectVideoModel(modelId: string): Promise<RuntimePublicState> {
+    if (this.models.length === 0) await this.refreshModels();
+    if (modelId && !this.models.some((model) => model.kind === "video" && model.id === modelId)) throw new Error("Модель недоступна");
+    await this.state.selectVideoModel(modelId);
+    return this.publicState();
+  }
+
   async testConnection(): Promise<RuntimePublicState> {
     try {
       await this.refreshModels();
@@ -91,7 +138,11 @@ export class FreeAiRuntime {
     const selected = await this.state.load();
     return {
       selectedModelId: selected.selectedModelId,
-      models: this.models.map(({ id, name }) => ({ id, name })),
+      imageModelId: selected.imageModelId,
+      videoModelId: selected.videoModelId,
+      models: this.models.filter((model) => model.kind === undefined || model.kind === "text").map(({ id, name }) => ({ id, name })),
+      imageModels: this.models.filter((model) => model.kind === "image").map(({ id, name }) => ({ id, name })),
+      videoModels: this.models.filter((model) => model.kind === "video").map(({ id, name }) => ({ id, name })),
       connected: this.models.length > 0 && !this.lastError,
       lastRoute: this.lastRoute,
       lastError: this.lastError,

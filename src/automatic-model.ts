@@ -9,5 +9,6 @@ export function addAutomaticModel(models: PublicModel[]): PublicModel[] {
     id: automaticModelId,
     name: "Автоматически (наилучший пинг)",
     routeCount: availableModels.reduce((total, model) => total + model.routeCount, 0),
+    kind: "text",
   }, ...availableModels];
 }
