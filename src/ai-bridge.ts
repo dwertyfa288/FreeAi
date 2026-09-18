@@ -4,6 +4,7 @@ import type { RouterCompletionRequest, RouterEvent } from "./types.js";
 
 export interface AiBridgeDependencies {
   selectedModel(): Promise<string>;
+  strictModel(): Promise<boolean>;
   complete(request: RouterCompletionRequest, signal?: AbortSignal): AsyncIterable<RouterEvent>;
   onRoute(event: Extract<RouterEvent, { type: "route" }>): void;
   signal?: AbortSignal;
@@ -37,6 +38,7 @@ function reasoningChunk(part: ReasoningStreamPart): AiChunk {
 export async function* completeForAstra(request: AiCompleteRequest, dependencies: AiBridgeDependencies): AsyncIterable<AiChunk | string> {
   const selectedModel = await dependencies.selectedModel();
   if (!selectedModel) throw new Error("Выберите модель на странице плагина FreeAI");
+  const strict = await dependencies.strictModel();
   const showReasoning = reasoningEnabled(request);
   const reasoningParser = showReasoning ? new ReasoningStreamParser() : null;
   const payload: RouterCompletionRequest = {
@@ -57,6 +59,7 @@ export async function* completeForAstra(request: AiCompleteRequest, dependencies
     maxTokens: request.maxTokens ?? undefined,
     reasoningEffort: request.reasoningEffort ?? undefined,
     showReasoning,
+    strictModel: strict,
   };
   for await (const event of dependencies.complete(payload, dependencies.signal)) {
     if (event.type === "route") dependencies.onRoute(event);

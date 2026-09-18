@@ -33,6 +33,7 @@ export interface RouterCompletionRequest {
   maxTokens?: number;
   reasoningEffort?: string;
   showReasoning?: boolean;
+  strictModel?: boolean;
 }
 
 export type RouterEvent =

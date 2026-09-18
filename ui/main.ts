@@ -14,6 +14,7 @@ interface UiState {
   selectedModelId: string;
   imageModelId: string;
   videoModelId: string;
+  strictModel: boolean;
   models: PublicModel[];
   imageModels: PublicModel[];
   videoModels: PublicModel[];
@@ -35,6 +36,7 @@ function getElements() {
     route: document.querySelector<HTMLElement>("#route")!,
     error: document.querySelector<HTMLElement>("#error")!,
     toast: document.querySelector<HTMLElement>("#toast")!,
+    strictModel: document.querySelector<HTMLInputElement>("#strict-model")!,
   };
 }
 
@@ -64,12 +66,13 @@ function toModelOption(model: PublicModel): { id: string; name: string } {
 }
 
 function render(state: UiState): void {
-  const { status, availability, route, error } = getElements();
+  const { status, availability, route, error, strictModel } = getElements();
   status.textContent = state.connected ? "Онлайн" : "Нет связи";
   status.className = state.connected ? "badge ok" : "badge";
   chatPicker.setModels(state.models.map(toModelOption), state.selectedModelId);
   imagePicker.setModels(state.imageModels.map(toModelOption), state.imageModelId);
   videoPicker.setModels(state.videoModels.map(toModelOption), state.videoModelId);
+  strictModel.checked = state.strictModel;
   availability.textContent =
     state.models.length || state.imageModels.length || state.videoModels.length
       ? "Список обновляется автоматически"
@@ -114,6 +117,10 @@ function init() {
   });
   document.querySelector("#save-video")!.addEventListener("click", () => {
     void run("selectVideoModel", { modelId: videoPicker.value }, videoPicker.value ? "Модель видео выбрана" : "Выбор модели видео снят");
+  });
+  getElements().strictModel.addEventListener("change", (event) => {
+    const enabled = (event.target as HTMLInputElement).checked;
+    void run("setStrictMode", { enabled }, enabled ? "Строгий режим включён" : "Строгий режим выключен");
   });
   document.querySelector("#test")!.addEventListener("click", () => { void run("testConnection", {}, "Сервер доступен"); });
   void run("getState").then(() => { void run("refreshModels"); });

@@ -12,6 +12,7 @@ export interface RuntimePublicState {
   selectedModelId: string;
   imageModelId: string;
   videoModelId: string;
+  strictModel: boolean;
   models: Array<Pick<PublicModel, "id" | "name">>;
   imageModels: Array<Pick<PublicModel, "id" | "name">>;
   videoModels: Array<Pick<PublicModel, "id" | "name">>;
@@ -44,6 +45,7 @@ export class FreeAiRuntime {
     try {
       yield* completeForAstra(request, {
         selectedModel: async () => (await this.state.load()).selectedModelId,
+        strictModel: async () => (await this.state.load()).strictModel,
         complete: (payload, signal) => this.client.complete(payload, signal),
         onRoute: (route) => { this.lastRoute = route; },
         signal: controller.signal,
@@ -125,6 +127,11 @@ export class FreeAiRuntime {
     return this.publicState();
   }
 
+  async setStrictMode(enabled: boolean): Promise<RuntimePublicState> {
+    await this.state.setStrictModel(enabled);
+    return this.publicState();
+  }
+
   async testConnection(): Promise<RuntimePublicState> {
     try {
       await this.refreshModels();
@@ -140,6 +147,7 @@ export class FreeAiRuntime {
       selectedModelId: selected.selectedModelId,
       imageModelId: selected.imageModelId,
       videoModelId: selected.videoModelId,
+      strictModel: selected.strictModel,
       models: this.models.filter((model) => model.kind === undefined || model.kind === "text").map(({ id, name }) => ({ id, name })),
       imageModels: this.models.filter((model) => model.kind === "image").map(({ id, name }) => ({ id, name })),
       videoModels: this.models.filter((model) => model.kind === "video").map(({ id, name }) => ({ id, name })),

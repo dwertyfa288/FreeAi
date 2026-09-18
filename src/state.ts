@@ -6,12 +6,14 @@ export interface PluginState {
   selectedModelId: string;
   imageModelId: string;
   videoModelId: string;
+  strictModel: boolean;
 }
 
 export interface PluginStateUpdate {
   selectedModelId?: string;
   imageModelId?: string;
   videoModelId?: string;
+  strictModel?: boolean;
 }
 
 export class PluginStateStore {
@@ -28,9 +30,10 @@ export class PluginStateStore {
         selectedModelId: PluginStateStore.readString(parsed.selectedModelId),
         imageModelId: PluginStateStore.readString(parsed.imageModelId),
         videoModelId: PluginStateStore.readString(parsed.videoModelId),
+        strictModel: parsed.strictModel === true,
       };
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { selectedModelId: "", imageModelId: "", videoModelId: "" };
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return { selectedModelId: "", imageModelId: "", videoModelId: "", strictModel: false };
       throw new Error("FreeAI state is invalid");
     }
   }
@@ -41,6 +44,7 @@ export class PluginStateStore {
       selectedModelId: update.selectedModelId ?? current.selectedModelId,
       imageModelId: update.imageModelId ?? current.imageModelId,
       videoModelId: update.videoModelId ?? current.videoModelId,
+      strictModel: update.strictModel ?? current.strictModel,
     };
     await mkdir(dirname(this.path), { recursive: true });
     const temporaryPath = `${this.path}.tmp-${process.pid}-${randomUUID()}`;
@@ -65,5 +69,9 @@ export class PluginStateStore {
 
   async selectVideoModel(videoModelId: string): Promise<PluginState> {
     return this.persist({ videoModelId });
+  }
+
+  async setStrictModel(strictModel: boolean): Promise<PluginState> {
+    return this.persist({ strictModel });
   }
 }

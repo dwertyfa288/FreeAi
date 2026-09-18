@@ -78,6 +78,7 @@ export const app = plugin({
       selectModel: (params) => getRuntime().selectModel(String(record(params).modelId ?? "")),
       selectImageModel: (params) => getRuntime().selectImageModel(String(record(params).modelId ?? "")),
       selectVideoModel: (params) => getRuntime().selectVideoModel(String(record(params).modelId ?? "")),
+      setStrictMode: (params) => getRuntime().setStrictMode(record(params).enabled === true),
       testConnection: () => getRuntime().testConnection(),
     },
   },
