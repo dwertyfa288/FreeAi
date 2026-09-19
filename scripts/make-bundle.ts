@@ -51,7 +51,7 @@ const manifest = {
   min_astra_version: "",
   capabilities: ["ai_provider", "tools", "ui_contributions"],
   permissions: {},
-  permissions_hash: "sha256:3512c3b5a348f6ed334d6ec5b8032b2d5f210b6f9f7e62f8dc00d7f356e00a2a",
+  permissions_hash: "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
   entry: { command: "node", args: ["dist/index.js"] },
   files,
 };
