@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsx scripts/build-ui.ts && tsx scripts/build-plugin.ts",
+    "bundle": "npm run build && tsx scripts/make-bundle.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
