@@ -40,7 +40,7 @@
         </label>
         <p class="muted toggle-hint">Вкл: запросы выполняются строго выбранной моделью, при недоступности — ошибка. Выкл: сервер подберёт стабильную замену.</p>
       </section>
-      <section class="card model-card">
+      <section id="image-section" class="card model-card" hidden>
         <label id="image-label">Модель для изображений</label>
         <div id="image-picker" class="model-picker">
           <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="image-label image-value">
@@ -57,7 +57,7 @@
         </div>
         <div class="actions"><button id="save-image">Выбрать</button></div>
       </section>
-      <section class="card model-card">
+      <section id="video-section" class="card model-card" hidden>
         <label id="video-label">Модель для видео</label>
         <div id="video-picker" class="model-picker">
           <button class="model-trigger" type="button" data-picker-trigger aria-haspopup="listbox" aria-expanded="false" aria-labelledby="video-label video-value">

@@ -12,12 +12,29 @@ function getRuntime(): FreeAiRuntime {
   return runtime;
 }
 
-function firstResultUrl(assets: Array<{ url?: string; base64?: string }>): string {
-  for (const asset of assets) {
-    if (asset.url) return asset.url;
-    if (asset.base64) return `data:image/png;base64,${asset.base64}`;
+const fileTtlNotice = "Файл будет удалён через 24 часа.";
+
+function assetUrl(asset: { url?: string; base64?: string; contentType?: string }): string {
+  if (asset.url) return asset.url;
+  if (asset.base64) {
+    const mime = asset.contentType?.startsWith("video/") ? "video/mp4" : "image/png";
+    return `data:${mime};base64,${asset.base64}`;
   }
   return "";
+}
+
+function renderAssets(kind: "image" | "video", assets: Array<{ url?: string; base64?: string; contentType?: string }>): string {
+  const rendered = assets
+    .map((asset) => assetUrl(asset))
+    .filter((url) => url.length > 0)
+    .map((url, index) => {
+      const label = kind === "video"
+        ? (assets.length > 1 ? `Видео ${index + 1}` : "Скачать видео")
+        : (assets.length > 1 ? `Сгенерированное изображение ${index + 1}` : "Сгенерированное изображение");
+      return kind === "video" ? `[${label}](${url})` : `![${label}](${url})`;
+    });
+  if (rendered.length === 0) return "";
+  return `${rendered.join("\n\n")}\n\n${fileTtlNotice}`;
 }
 
 export const app = plugin({
@@ -27,7 +44,7 @@ export const app = plugin({
   },
   tools: {
     freeai_generate_image: tool({
-      description: "Сгенерировать изображение по запросу пользователя и вернуть его URL или data URI. Вызывай, когда пользователь просит картинку, иллюстрацию или изображение.",
+      description: "Сгенерировать изображение по запросу пользователя и вернуть готовую markdown-картинку. Вызывай, когда пользователь просит картинку, иллюстрацию или изображение. После генерации ОБЯЗАТЕЛЬНО сообщи пользователю отдельной фразой: \"Изображение будет доступно по ссылке 24 часа, потом файл автоматически удалится\".",
       input: s.object({
         prompt: s.string().optional().describe("Точное описание изображения, которое нужно сгенерировать"),
         size: s.string().optional().describe("Размер изображения, например 1024x1024"),
@@ -36,16 +53,16 @@ export const app = plugin({
       run: async ({ prompt, size, n }) => {
         try {
           const result = await getRuntime().generate("image", { prompt: prompt?.trim() || "", size, n });
-          const url = firstResultUrl(result.assets);
-          if (!url) return { success: false, error: "Сервер не вернул изображение" };
-          return { success: true, result: url };
+          const rendered = renderAssets("image", result.assets);
+          if (!rendered) return { success: false, error: "Сервер не вернул изображение" };
+          return { success: true, result: rendered };
         } catch (error) {
           return { success: false, error: error instanceof Error ? error.message : "Ошибка генерации изображения" };
         }
       },
     }),
     freeai_generate_video: tool({
-      description: "Сгенерировать видео по запросу пользователя и вернуть его URL. Вызывай, когда пользователь просит видеоролик, анимацию или видео.",
+      description: "Сгенерировать видео по запросу пользователя и вернуть ссылку. Вызывай, когда пользователь просит видеоролик, анимацию или видео. После генерации ОБЯЗАТЕЛЬНО сообщи пользователю отдельной фразой: \"Видео будет доступно по ссылке 24 часа, потом файл автоматически удалится\".",
       input: s.object({
         prompt: s.string().optional().describe("Точное описание видео, которое нужно сгенерировать"),
         durationSeconds: s.integer().optional().describe("Длительность видео в секундах"),
@@ -54,9 +71,9 @@ export const app = plugin({
       run: async ({ prompt, durationSeconds, size }) => {
         try {
           const result = await getRuntime().generate("video", { prompt: prompt?.trim() || "", durationSeconds, size });
-          const url = firstResultUrl(result.assets);
-          if (!url) return { success: false, error: "Сервер не вернул видео" };
-          return { success: true, result: url };
+          const rendered = renderAssets("video", result.assets);
+          if (!rendered) return { success: false, error: "Сервер не вернул видео" };
+          return { success: true, result: rendered };
         } catch (error) {
           return { success: false, error: error instanceof Error ? error.message : "Ошибка генерации видео" };
         }

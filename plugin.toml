@@ -1,7 +1,7 @@
 [plugin]
 id = "dwertyfa-free-ai"
 name = "FreeAI"
-version = "0.1.2"
+version = "0.1.4"
 description = "Automatic model routing for chat, image and video generation"
 author = "dwertyfa"
 license = "MIT"

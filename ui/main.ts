@@ -72,6 +72,8 @@ function render(state: UiState): void {
   chatPicker.setModels(state.models.map(toModelOption), state.selectedModelId);
   imagePicker.setModels(state.imageModels.map(toModelOption), state.imageModelId);
   videoPicker.setModels(state.videoModels.map(toModelOption), state.videoModelId);
+  document.getElementById("image-section")!.hidden = state.imageModels.length === 0;
+  document.getElementById("video-section")!.hidden = state.videoModels.length === 0;
   strictModel.checked = state.strictModel;
   availability.textContent =
     state.models.length || state.imageModels.length || state.videoModels.length
