@@ -10,16 +10,24 @@ interface PublicModel {
   kind: string;
 }
 
+interface PingResult {
+  ok: boolean;
+  latencyMs: number;
+  modelId: string;
+}
+
 interface UiState {
   selectedModelId: string;
   imageModelId: string;
   videoModelId: string;
   strictModel: boolean;
+  automaticModelId: string;
   models: PublicModel[];
   imageModels: PublicModel[];
   videoModels: PublicModel[];
   connected: boolean;
   lastRoute: { providerName: string; modelId: string; substituted: boolean } | null;
+  lastPing: PingResult | null;
   lastError: string;
 }
 
@@ -34,9 +42,11 @@ function getElements() {
     status: document.querySelector<HTMLElement>("#status")!,
     availability: document.querySelector<HTMLElement>("#availability")!,
     route: document.querySelector<HTMLElement>("#route")!,
+    ping: document.querySelector<HTMLElement>("#ping")!,
     error: document.querySelector<HTMLElement>("#error")!,
     toast: document.querySelector<HTMLElement>("#toast")!,
     strictModel: document.querySelector<HTMLInputElement>("#strict-model")!,
+    pingModel: document.querySelector<HTMLButtonElement>("#ping-model")!,
   };
 }
 
@@ -49,6 +59,7 @@ async function call(method: string, params: Record<string, unknown> = {}): Promi
 }
 
 let toastTimer = 0;
+let stateCache: UiState | null = null;
 let chatPicker: ModelPicker;
 let imagePicker: ModelPicker;
 let videoPicker: ModelPicker;
@@ -65,8 +76,37 @@ function toModelOption(model: PublicModel): { id: string; name: string } {
   return { id: model.id, name: model.name };
 }
 
+function isSpecificModelSelected(state: UiState): boolean {
+  return Boolean(state.selectedModelId) && state.selectedModelId !== state.automaticModelId;
+}
+
+function checkModelPing(): void {
+  if (!stateCache || !isSpecificModelSelected(stateCache)) return;
+  void run("pingModel", { modelId: stateCache.selectedModelId }).then((state) => {
+    const ping = state?.lastPing;
+    if (ping) showToast(ping.ok ? `Пинг: ${ping.latencyMs} мс` : "Недоступна", !ping.ok);
+  });
+}
+
+function pingDisplayName(state: UiState, modelId: string): string {
+  if (!modelId) return "";
+  const model = state.models.find((item) => item.id === modelId);
+  if (model) return model.name;
+  if (modelId === state.automaticModelId) return "Автоматически";
+  return modelId;
+}
+
+function formatPing(state: UiState): string {
+  const ping = state.lastPing;
+  if (!ping) return "";
+  if (!ping.ok) return "Недоступна";
+  const modelName = pingDisplayName(state, ping.modelId);
+  return `Пинг: ${ping.latencyMs} мс${modelName ? ` · ${modelName}` : ""}`;
+}
+
 function render(state: UiState): void {
-  const { status, availability, route, error, strictModel } = getElements();
+  stateCache = state;
+  const { status, availability, route, error, strictModel, ping, pingModel } = getElements();
   status.textContent = state.connected ? "Онлайн" : "Нет связи";
   status.className = state.connected ? "badge ok" : "badge";
   chatPicker.setModels(state.models.map(toModelOption), state.selectedModelId);
@@ -80,21 +120,28 @@ function render(state: UiState): void {
       ? "Список обновляется автоматически"
       : "Доступных моделей нет";
   route.textContent = state.lastRoute
-    ? state.models.find((model) => model.id === state.lastRoute?.modelId)?.name ?? state.lastRoute.modelId
+    ? pingDisplayName(state, state.lastRoute.modelId)
     : "Пока нет завершённых запросов";
+  ping.textContent = formatPing(state);
+  const specificModelSelected = Boolean(state.selectedModelId) && state.selectedModelId !== state.automaticModelId;
+  pingModel.disabled = !specificModelSelected;
   error.textContent = state.lastError;
 }
 
-async function run(method: string, params: Record<string, unknown> = {}, successMessage?: string): Promise<void> {
+async function run(method: string, params: Record<string, unknown> = {}, successMessage?: string): Promise<UiState | null> {
   const { error } = getElements();
   error.textContent = "";
   try {
-    render(await call(method, params));
+    const state = await call(method, params);
+    stateCache = state;
+    render(state);
     if (successMessage) showToast(successMessage);
+    return state;
   } catch (failure) {
     const msg = failure instanceof Error ? failure.message : "Ошибка";
     error.textContent = msg;
     showToast(msg, true);
+    return null;
   }
 }
 
@@ -125,6 +172,7 @@ function init() {
     void run("setStrictMode", { enabled }, enabled ? "Строгий режим включён" : "Строгий режим выключен");
   });
   document.querySelector("#test")!.addEventListener("click", () => { void run("testConnection", {}, "Сервер доступен"); });
+  getElements().pingModel.addEventListener("click", checkModelPing);
   void run("getState").then(() => { void run("refreshModels"); });
 }
 

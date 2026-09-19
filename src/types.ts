@@ -17,6 +17,13 @@ export interface GenerationResult {
   substituted: boolean;
 }
 
+export interface ModelTestResult {
+  ok: boolean;
+  latencyMs: number;
+  modelId?: string;
+  error?: string;
+}
+
 export interface RouterMessage {
   role: string;
   content: string | null;

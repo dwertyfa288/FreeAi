@@ -33,6 +33,9 @@
           </div>
         </div>
         <div class="actions"><button id="save-chat">Выбрать</button></div>
+        <div class="actions">
+          <button id="ping-model" class="ghost" disabled>Проверить пинг</button>
+        </div>
         <label class="toggle">
           <input type="checkbox" id="strict-model" />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -81,6 +84,7 @@
       <section class="card compact">
         <h2>Последний маршрут</h2>
         <p id="route" class="muted">Пока нет завершённых запросов</p>
+        <p id="ping" class="muted"></p>
         <p id="availability" class="muted"></p>
         <button id="test" class="ghost">Проверить сервер</button>
       </section>

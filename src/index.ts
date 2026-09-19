@@ -97,6 +97,7 @@ export const app = plugin({
       selectVideoModel: (params) => getRuntime().selectVideoModel(String(record(params).modelId ?? "")),
       setStrictMode: (params) => getRuntime().setStrictMode(record(params).enabled === true),
       testConnection: () => getRuntime().testConnection(),
+      pingModel: (params) => getRuntime().pingModel(String(record(params).modelId ?? "")),
     },
   },
   onShutdown: () => getRuntime().shutdown(),

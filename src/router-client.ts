@@ -1,5 +1,5 @@
 import { parseSse } from "./sse.js";
-import type { GenerationKind, GenerationResult, PublicModel, RouterCompletionRequest, RouterEvent } from "./types.js";
+import type { GenerationKind, GenerationResult, ModelTestResult, PublicModel, RouterCompletionRequest, RouterEvent } from "./types.js";
 import { MaintenanceModeError } from "./user-errors.js";
 
 type FetchFunction = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
@@ -59,6 +59,35 @@ export class RouterClient {
       publicModelId: typeof payload.publicModelId === "string" ? payload.publicModelId : "",
       upstreamModelId: typeof payload.upstreamModelId === "string" ? payload.upstreamModelId : "",
       substituted: payload.substituted === true,
+    };
+  }
+
+  async testModel(modelId: string, signal?: AbortSignal): Promise<ModelTestResult> {
+    const response = await this.fetchRequest(`${this.serverUrl}/api/plugin/test`, {
+      method: "POST",
+      headers: { ...this.headers(), "content-type": "application/json" },
+      body: JSON.stringify({ model: modelId }),
+      signal,
+    });
+    if (!response.ok) {
+      let errorBody = "";
+      try { errorBody = await response.text(); } catch {}
+      if (response.status === 503) {
+        try {
+          const payload = JSON.parse(errorBody) as { code?: unknown };
+          if (payload.code === "MAINTENANCE_MODE") throw new MaintenanceModeError();
+        } catch (error) {
+          if (error instanceof MaintenanceModeError) throw error;
+        }
+      }
+      throw new Error(`FreeAI test request failed: ${response.status} ${errorBody}`);
+    }
+    const payload = await response.json() as Partial<ModelTestResult>;
+    return {
+      ok: payload.ok === true,
+      latencyMs: typeof payload.latencyMs === "number" ? payload.latencyMs : 0,
+      modelId: typeof payload.modelId === "string" ? payload.modelId : modelId,
+      error: typeof payload.error === "string" ? payload.error : undefined,
     };
   }
 

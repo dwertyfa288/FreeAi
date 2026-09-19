@@ -7,3 +7,5 @@ freeai-state.json.tmp-*
 *.astraplugin
 *.tsbuildinfo
 tests/
+CHATS.md
+AGENTS.md

@@ -13,15 +13,24 @@ export interface RuntimePublicState {
   imageModelId: string;
   videoModelId: string;
   strictModel: boolean;
+  automaticModelId: string;
   models: Array<Pick<PublicModel, "id" | "name">>;
   imageModels: Array<Pick<PublicModel, "id" | "name">>;
   videoModels: Array<Pick<PublicModel, "id" | "name">>;
   connected: boolean;
   lastRoute: Extract<RouterEvent, { type: "route" }> | null;
+  lastPing: RuntimePingResult | null;
   lastError: string;
 }
 
+export interface RuntimePingResult {
+  ok: boolean;
+  latencyMs: number;
+  modelId: string;
+}
+
 const modelSyncIntervalMs = 300_000;
+const pingTimeoutMs = 30_000;
 
 export class FreeAiRuntime {
   private readonly client: RouterClient;
@@ -29,9 +38,11 @@ export class FreeAiRuntime {
   private readonly activeRequests = new Set<AbortController>();
   private models: PublicModel[] = [];
   private lastRoute: Extract<RouterEvent, { type: "route" }> | null = null;
+  private lastPing: RuntimePingResult | null = null;
   private lastError = "";
   private modelSyncTimer: NodeJS.Timeout | undefined;
   private modelSyncRunning = false;
+
 
   constructor(pluginDirectory: string) {
     const deployment = loadDeployment(pluginDirectory);
@@ -133,10 +144,30 @@ export class FreeAiRuntime {
   }
 
   async testConnection(): Promise<RuntimePublicState> {
+    const startedAt = Date.now();
     try {
       await this.refreshModels();
+      this.lastPing = { ok: true, latencyMs: Date.now() - startedAt, modelId: "" };
+      this.lastError = "";
     } catch (error) {
+      this.lastPing = { ok: false, latencyMs: 0, modelId: "" };
+      this.lastError = "";
+    }
+    return this.publicState();
+  }
+
+  async pingModel(modelId: string): Promise<RuntimePublicState> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), pingTimeoutMs);
+    try {
+      const result = await this.client.testModel(modelId, controller.signal);
+      this.lastPing = { ok: result.ok, latencyMs: result.latencyMs, modelId };
+      this.lastError = "";
+    } catch (error) {
+      this.lastPing = { ok: false, latencyMs: 0, modelId };
       this.lastError = error instanceof Error ? error.message : "Сервер недоступен";
+    } finally {
+      clearTimeout(timer);
     }
     return this.publicState();
   }
@@ -148,11 +179,13 @@ export class FreeAiRuntime {
       imageModelId: selected.imageModelId,
       videoModelId: selected.videoModelId,
       strictModel: selected.strictModel,
+      automaticModelId,
       models: this.models.filter((model) => model.kind === undefined || model.kind === "text").map(({ id, name }) => ({ id, name })),
       imageModels: this.models.filter((model) => model.kind === "image").map(({ id, name }) => ({ id, name })),
       videoModels: this.models.filter((model) => model.kind === "video").map(({ id, name }) => ({ id, name })),
       connected: this.models.length > 0 && !this.lastError,
       lastRoute: this.lastRoute,
+      lastPing: this.lastPing,
       lastError: this.lastError,
     };
   }
