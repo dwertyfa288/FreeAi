@@ -50,6 +50,7 @@ export class PluginStateStore {
     const temporaryPath = `${this.path}.tmp-${process.pid}-${randomUUID()}`;
     try {
       await writeFile(temporaryPath, JSON.stringify(next), { encoding: "utf8", mode: 0o600 });
+      await unlink(this.path).catch(() => undefined);
       await rename(temporaryPath, this.path);
     } catch (error) {
       await unlink(temporaryPath).catch(() => undefined);
