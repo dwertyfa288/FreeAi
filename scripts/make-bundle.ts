@@ -39,6 +39,8 @@ for (const name of included) {
   const data = readFileSync(join(root, name));
   files.push({ path: name, sha256: sha256(data), size: data.length, mode: "0644" });
 }
+files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+const sortedIncluded = files.map((file) => file.path);
 
 const manifest = {
   schema: "astra.bundle/2",
@@ -59,7 +61,7 @@ const allEntries: Array<{ name: string; data: Buffer; offset: number }> = [];
 let offset = 0;
 allEntries.push({ name: "MANIFEST.json", data: manifestData, offset });
 offset += 30 + Buffer.from("MANIFEST.json", "utf8").length + manifestData.length;
-for (const name of included) {
+for (const name of sortedIncluded) {
   const data = readFileSync(join(root, name));
   allEntries.push({ name, data, offset });
   offset += 30 + Buffer.from(name, "utf8").length + data.length;
