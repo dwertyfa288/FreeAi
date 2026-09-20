@@ -32,7 +32,7 @@ export class RouterClient {
     });
   }
 
-  async generate(kind: GenerationKind, input: { prompt: string; model?: string; n?: number; size?: string; durationSeconds?: number }, signal?: AbortSignal): Promise<GenerationResult> {
+  async generate(kind: GenerationKind, input: { prompt: string; model?: string; n?: number; size?: string; durationSeconds?: number; clientId?: string }, signal?: AbortSignal): Promise<GenerationResult> {
     const response = await this.fetchRequest(`${this.serverUrl}/api/plugin/generate`, {
       method: "POST",
       headers: { ...this.headers(), "content-type": "application/json" },
@@ -42,6 +42,12 @@ export class RouterClient {
     if (!response.ok) {
       let errorBody = "";
       try { errorBody = await response.text(); } catch {}
+      if (response.status === 429) {
+        let parsed: { error?: string; code?: string; used?: number; limit?: number; windowHours?: number } = {};
+        try { parsed = JSON.parse(errorBody); } catch {}
+        const detail = parsed.error || `Лимит: ${parsed.used ?? "?"}/${parsed.limit ?? "?"} запросов за ${parsed.windowHours ?? "?"} ч`;
+        throw new Error(`GENERATION_LIMIT_EXCEEDED: ${detail}`);
+      }
       if (response.status === 503) {
         try {
           const payload = JSON.parse(errorBody) as { code?: unknown };
@@ -59,6 +65,7 @@ export class RouterClient {
       publicModelId: typeof payload.publicModelId === "string" ? payload.publicModelId : "",
       upstreamModelId: typeof payload.upstreamModelId === "string" ? payload.upstreamModelId : "",
       substituted: payload.substituted === true,
+      limitRemaining: typeof payload.limitRemaining === "number" ? payload.limitRemaining : undefined,
     };
   }
 

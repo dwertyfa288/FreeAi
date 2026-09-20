@@ -2,6 +2,7 @@ import { join } from "node:path";
 import type { AiChunk, AiCompleteRequest } from "astra-plugin-sdk";
 import { completeForAstra } from "./ai-bridge.js";
 import { addAutomaticModel, automaticModelId } from "./automatic-model.js";
+import { getInstanceId } from "./instance-id.js";
 import { loadDeployment } from "./deployment.js";
 import { RouterClient } from "./router-client.js";
 import { PluginStateStore } from "./state.js";
@@ -35,6 +36,7 @@ const pingTimeoutMs = 30_000;
 export class FreeAiRuntime {
   private readonly client: RouterClient;
   private readonly state: PluginStateStore;
+  private readonly pluginDirectory: string;
   private readonly activeRequests = new Set<AbortController>();
   private models: PublicModel[] = [];
   private lastRoute: Extract<RouterEvent, { type: "route" }> | null = null;
@@ -45,6 +47,7 @@ export class FreeAiRuntime {
 
 
   constructor(pluginDirectory: string) {
+    this.pluginDirectory = pluginDirectory;
     const deployment = loadDeployment(pluginDirectory);
     this.client = new RouterClient(deployment.serverUrl, deployment.pluginToken);
     this.state = new PluginStateStore(join(pluginDirectory, "freeai-state.json"));
@@ -77,7 +80,14 @@ export class FreeAiRuntime {
     this.activeRequests.add(controller);
     try {
       const model = kind === "image" ? state.imageModelId : state.videoModelId;
-      const result = await this.client.generate(kind, { ...input, model: model.trim() ? model : undefined }, controller.signal);
+      const result = await this.client.generate(kind, {
+        prompt: input.prompt,
+        n: input.n,
+        size: input.size,
+        durationSeconds: input.durationSeconds,
+        model: model.trim() ? model : undefined,
+        clientId: getInstanceId(this.pluginDirectory),
+      }, controller.signal);
       if (result.assets.length === 0) throw new Error("Сервер не вернул результат генерации");
       this.lastRoute = { type: "route", providerName: result.providerName, modelId: result.publicModelId, substituted: result.substituted };
       this.lastError = "";

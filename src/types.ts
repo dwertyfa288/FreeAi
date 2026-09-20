@@ -5,6 +5,7 @@ export interface PublicModel {
   name: string;
   routeCount: number;
   kind: ModelKind;
+  generationLimit?: { hours: number; requests: number };
 }
 
 export type GenerationKind = Exclude<ModelKind, "text">;
@@ -15,6 +16,17 @@ export interface GenerationResult {
   publicModelId: string;
   upstreamModelId: string;
   substituted: boolean;
+  limitRemaining?: number;
+}
+
+export interface GenerationRequest {
+  kind: GenerationKind;
+  prompt: string;
+  model?: string;
+  n?: number;
+  size?: string;
+  durationSeconds?: number;
+  clientId?: string;
 }
 
 export interface ModelTestResult {

@@ -4,6 +4,8 @@ ui/app.js
 deployment.json
 freeai-state.json
 freeai-state.json.tmp-*
+freeai-instance.json
+freeai-instance.json.tmp-*
 *.astraplugin
 *.tsbuildinfo
 tests/
