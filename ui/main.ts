@@ -146,27 +146,21 @@ async function run(method: string, params: Record<string, unknown> = {}, success
 }
 
 function init() {
-  chatPicker = new ModelPicker(document.querySelector<HTMLElement>("#chat-picker")!);
+  chatPicker = new ModelPicker(document.querySelector<HTMLElement>("#chat-picker")!, {
+    onSelect: (modelId, modelName) => { void run("selectModel", { modelId }, `Выбрана модель: ${modelName}`); },
+  });
   imagePicker = new ModelPicker(document.querySelector<HTMLElement>("#image-picker")!, {
     allowEmpty: true,
     emptyLabel: "Автоматически",
+    onSelect: (modelId) => { void run("selectImageModel", { modelId }, modelId ? "Модель изображений выбрана" : "Выбор модели изображений снят"); },
   });
   videoPicker = new ModelPicker(document.querySelector<HTMLElement>("#video-picker")!, {
     allowEmpty: true,
     emptyLabel: "Автоматически",
+    onSelect: (modelId) => { void run("selectVideoModel", { modelId }, modelId ? "Модель видео выбрана" : "Выбор модели видео снят"); },
   });
 
   document.querySelector("#refresh")!.addEventListener("click", () => { void run("refreshModels", {}, "Модели обновлены"); });
-  document.querySelector("#save-chat")!.addEventListener("click", () => {
-    if (!chatPicker.value) return;
-    void run("selectModel", { modelId: chatPicker.value }, `Выбрана модель: ${chatPicker.selectedName}`);
-  });
-  document.querySelector("#save-image")!.addEventListener("click", () => {
-    void run("selectImageModel", { modelId: imagePicker.value }, imagePicker.value ? "Модель изображений выбрана" : "Выбор модели изображений снят");
-  });
-  document.querySelector("#save-video")!.addEventListener("click", () => {
-    void run("selectVideoModel", { modelId: videoPicker.value }, videoPicker.value ? "Модель видео выбрана" : "Выбор модели видео снят");
-  });
   getElements().strictModel.addEventListener("change", (event) => {
     const enabled = (event.target as HTMLInputElement).checked;
     void run("setStrictMode", { enabled }, enabled ? "Строгий режим включён" : "Строгий режим выключен");

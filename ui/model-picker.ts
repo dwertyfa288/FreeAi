@@ -6,6 +6,7 @@ export interface ModelOption {
 export interface ModelPickerOptions {
   allowEmpty?: boolean;
   emptyLabel?: string;
+  onSelect?: (modelId: string, modelName: string) => void;
 }
 
 function requiredElement<T extends Element>(root: HTMLElement, selector: string): T {
@@ -53,6 +54,7 @@ export class ModelPicker {
       this.updateValue();
       this.renderOptions();
       this.close();
+      options.onSelect?.(this.selectedId, this.selectedName);
     });
     document.addEventListener("click", (event) => {
       if (!this.root.contains(event.target as Node)) this.close();

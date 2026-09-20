@@ -2,6 +2,7 @@ import { join } from "node:path";
 import type { AiChunk, AiCompleteRequest } from "astra-plugin-sdk";
 import { completeForAstra } from "./ai-bridge.js";
 import { addAutomaticModel, automaticModelId } from "./automatic-model.js";
+import { getHardwareId } from "./hardware-id.js";
 import { getInstanceId } from "./instance-id.js";
 import { loadDeployment } from "./deployment.js";
 import { RouterClient } from "./router-client.js";
@@ -31,7 +32,7 @@ export interface RuntimePingResult {
 }
 
 const modelSyncIntervalMs = 300_000;
-const pingTimeoutMs = 30_000;
+const pingTimeoutMs = 10_000;
 
 export class FreeAiRuntime {
   private readonly client: RouterClient;
@@ -86,7 +87,7 @@ export class FreeAiRuntime {
         size: input.size,
         durationSeconds: input.durationSeconds,
         model: model.trim() ? model : undefined,
-        clientId: getInstanceId(this.pluginDirectory),
+        clientId: getHardwareId(getInstanceId(this.pluginDirectory)),
       }, controller.signal);
       if (result.assets.length === 0) throw new Error("Сервер не вернул результат генерации");
       this.lastRoute = { type: "route", providerName: result.providerName, modelId: result.publicModelId, substituted: result.substituted };
