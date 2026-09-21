@@ -1,12 +1,12 @@
 import { plugin, s, tool, UiContrib } from "astra-plugin-sdk";
-import { FreeAiRuntime } from "./runtime.js";
+import { PrimeAiRuntime } from "./runtime.js";
 
 const pluginDirectory = process.env.ASTRA_PLUGIN_DIR || process.cwd();
-let runtime: FreeAiRuntime | undefined;
+let runtime: PrimeAiRuntime | undefined;
 
-function getRuntime(): FreeAiRuntime {
+function getRuntime(): PrimeAiRuntime {
   if (!runtime) {
-    runtime = new FreeAiRuntime(pluginDirectory);
+    runtime = new PrimeAiRuntime(pluginDirectory);
     runtime.startModelSync();
   }
   return runtime;
@@ -38,12 +38,12 @@ function renderAssets(kind: "image" | "video", assets: Array<{ url?: string; bas
 }
 
 export const app = plugin({
-  id: "dwertyfa-free-ai",
+  id: "dwertyfa-prime-ai",
   ai: {
     complete: (request) => getRuntime().complete(request),
   },
   tools: {
-    freeai_generate_image: tool({
+    primeai_generate_image: tool({
       description: "Сгенерировать изображение по запросу пользователя и вернуть готовую markdown-картинку. Вызывай, когда пользователь просит картинку, иллюстрацию или изображение. После генерации ОБЯЗАТЕЛЬНО сообщи пользователю отдельной фразой: \"Изображение будет доступно по ссылке 24 часа, потом файл автоматически удалится\".",
       input: s.object({
         prompt: s.string().optional().describe("Точное описание изображения, которое нужно сгенерировать"),
@@ -61,7 +61,7 @@ export const app = plugin({
         }
       },
     }),
-    freeai_generate_video: tool({
+    primeai_generate_video: tool({
       description: "Сгенерировать видео по запросу пользователя и вернуть ссылку. Вызывай, когда пользователь просит видеоролик, анимацию или видео. После генерации ОБЯЗАТЕЛЬНО сообщи пользователю отдельной фразой: \"Видео будет доступно по ссылке 24 часа, потом файл автоматически удалится\".",
       input: s.object({
         prompt: s.string().optional().describe("Точное описание видео, которое нужно сгенерировать"),
@@ -83,7 +83,7 @@ export const app = plugin({
   ui: {
     contributions: [
       {
-        ...UiContrib.page("freeai-settings", "FreeAI", "index.html", {
+        ...UiContrib.page("primeai-settings", "PrimeAI", "index.html", {
           iconSvg: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 3h13v4h-9v4h8v4h-8v6H6z"/></svg>',
         }),
         transparent: true,
@@ -104,9 +104,9 @@ export const app = plugin({
   healthCheck: async () => {
     try {
       const state = await getRuntime().publicState();
-      return { healthy: true, status: state.connected ? `FreeAI connected: ${state.selectedModelId || "model not selected"}` : "FreeAI configured; open plugin settings" };
+      return { healthy: true, status: state.connected ? `PrimeAI connected: ${state.selectedModelId || "model not selected"}` : "PrimeAI configured; open plugin settings" };
     } catch (error) {
-      return { healthy: false, status: error instanceof Error ? error.message : "FreeAI configuration error" };
+      return { healthy: false, status: error instanceof Error ? error.message : "PrimeAI configuration error" };
     }
   },
 });

@@ -21,9 +21,9 @@ export class RouterClient {
 
   async listModels(signal?: AbortSignal): Promise<PublicModel[]> {
     const response = await this.fetchRequest(`${this.serverUrl}/api/plugin/models`, { headers: this.headers(), signal });
-    if (!response.ok) throw new Error(`FreeAI models request failed: ${response.status}`);
+    if (!response.ok) throw new Error(`PrimeAI models request failed: ${response.status}`);
     const payload = await response.json() as { models?: unknown };
-    if (!Array.isArray(payload.models)) throw new Error("Invalid FreeAI models response");
+    if (!Array.isArray(payload.models)) throw new Error("Invalid PrimeAI models response");
     return payload.models.filter((model): model is PublicModel => {
       if (!model || typeof model !== "object") return false;
       const value = model as Record<string, unknown>;
@@ -56,7 +56,7 @@ export class RouterClient {
           if (error instanceof MaintenanceModeError) throw error;
         }
       }
-      throw new Error(`FreeAI generation request failed: ${response.status} ${errorBody}`);
+      throw new Error(`PrimeAI generation request failed: ${response.status} ${errorBody}`);
     }
     const payload = await response.json() as Partial<GenerationResult>;
     return {
@@ -87,7 +87,7 @@ export class RouterClient {
           if (error instanceof MaintenanceModeError) throw error;
         }
       }
-      throw new Error(`FreeAI test request failed: ${response.status} ${errorBody}`);
+      throw new Error(`PrimeAI test request failed: ${response.status} ${errorBody}`);
     }
     const payload = await response.json() as Partial<ModelTestResult>;
     return {
@@ -116,10 +116,10 @@ export class RouterClient {
           if (error instanceof MaintenanceModeError) throw error;
         }
       }
-      throw new Error(`FreeAI completion request failed: ${response.status} ${errorBody}`);
+      throw new Error(`PrimeAI completion request failed: ${response.status} ${errorBody}`);
     }
     if (!response.headers.get("content-type")?.includes("text/event-stream") || !response.body) {
-      throw new Error("FreeAI server returned an invalid stream");
+      throw new Error("PrimeAI server returned an invalid stream");
     }
     yield* parseSse(response.body);
   }

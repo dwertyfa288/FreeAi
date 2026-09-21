@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-const stateFile = "freeai-instance.json";
+const stateFile = "primeai-instance.json";
 let cachedInstanceId = "";
 
 export function getInstanceId(pluginDirectory: string): string {

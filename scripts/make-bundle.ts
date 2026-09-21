@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const outPath = join(root, "dwertyfa-free-ai-0.2.0-noarch.astraplugin");
+const outPath = join(root, "dwertyfa-prime-ai-0.2.0-noarch.astraplugin");
 
 const included = [
   "icon.svg",
@@ -44,7 +44,7 @@ const sortedIncluded = files.map((file) => file.path);
 
 const manifest = {
   schema: "astra.bundle/2",
-  plugin_id: "dwertyfa-free-ai",
+  plugin_id: "dwertyfa-prime-ai",
   version: "0.2.0",
   platform: { os: "any", arch: "any" },
   protocol: 1,

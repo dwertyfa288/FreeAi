@@ -17,8 +17,8 @@ async function main(): Promise<void> {
     outfile: "dist/index.js",
     sourcemap: false,
     define: {
-      __FREEAI_SERVER_URL__: JSON.stringify(String(deployment.serverUrl ?? "").trim()),
-      __FREEAI_PLUGIN_TOKEN__: JSON.stringify(String(deployment.pluginToken ?? "").trim()),
+      __PRIMEAI_SERVER_URL__: JSON.stringify(String(deployment.serverUrl ?? "").trim()),
+      __PRIMEAI_PLUGIN_TOKEN__: JSON.stringify(String(deployment.pluginToken ?? "").trim()),
     },
   });
 }

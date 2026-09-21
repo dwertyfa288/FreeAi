@@ -1,6 +1,6 @@
-# FreeAI для Astra
+# PrimeAI для Astra
 
-AI-провайдер FreeAI: маршрутизирует запросы к моделям через Router API с автоматическим выбором стабильного маршрута.
+AI-провайдер PrimeAI: маршрутизирует запросы к моделям через Router API с автоматическим выбором стабильного маршрута.
 
 ## Настройка
 
@@ -24,4 +24,4 @@ AI-провайдер FreeAI: маршрутизирует запросы к м�
        astra-plugin check --strict .
        astra-plugin build .
 
-   Результат — `dwertyfa-free-ai-<version>-noarch.astraplugin`.
+   Результат — `dwertyfa-prime-ai-<version>-noarch.astraplugin`.

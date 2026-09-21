@@ -37,7 +37,7 @@ function reasoningChunk(part: ReasoningStreamPart): AiChunk {
 
 export async function* completeForAstra(request: AiCompleteRequest, dependencies: AiBridgeDependencies): AsyncIterable<AiChunk | string> {
   const selectedModel = await dependencies.selectedModel();
-  if (!selectedModel) throw new Error("Выберите модель на странице плагина FreeAI");
+  if (!selectedModel) throw new Error("Выберите модель на странице плагина PrimeAI");
   const strict = await dependencies.strictModel();
   const showReasoning = reasoningEnabled(request);
   const reasoningParser = showReasoning ? new ReasoningStreamParser() : null;
@@ -75,7 +75,7 @@ export async function* completeForAstra(request: AiCompleteRequest, dependencies
       }
       return;
     }
-    if (event.type === "error") throw new Error(`FreeAI: ${event.code}${event.detail ? ` (${event.detail})` : ""}`);
+    if (event.type === "error") throw new Error(`PrimeAI: ${event.code}${event.detail ? ` (${event.detail})` : ""}`);
   }
-  throw new Error("FreeAI stream ended unexpectedly");
+  throw new Error("PrimeAI stream ended unexpectedly");
 }

@@ -34,7 +34,7 @@ export interface RuntimePingResult {
 const modelSyncIntervalMs = 300_000;
 const pingTimeoutMs = 10_000;
 
-export class FreeAiRuntime {
+export class PrimeAiRuntime {
   private readonly client: RouterClient;
   private readonly state: PluginStateStore;
   private readonly pluginDirectory: string;
@@ -51,7 +51,7 @@ export class FreeAiRuntime {
     this.pluginDirectory = pluginDirectory;
     const deployment = loadDeployment(pluginDirectory);
     this.client = new RouterClient(deployment.serverUrl, deployment.pluginToken);
-    this.state = new PluginStateStore(join(pluginDirectory, "freeai-state.json"));
+    this.state = new PluginStateStore(join(pluginDirectory, "primeai-state.json"));
   }
 
   async *complete(request: AiCompleteRequest): AsyncIterable<AiChunk | string> {

@@ -1,6 +1,6 @@
 import type { PublicModel } from "./types.js";
 
-export const automaticModelId = "__freeai_auto__";
+export const automaticModelId = "__primeai_auto__";
 
 export function addAutomaticModel(models: PublicModel[]): PublicModel[] {
   const availableModels = models.filter((model) => model.id !== automaticModelId);

@@ -5,29 +5,29 @@ function parseEvent(name: string, data: string): RouterEvent {
   try {
     value = JSON.parse(data);
   } catch {
-    throw new Error("Invalid FreeAI stream event");
+    throw new Error("Invalid PrimeAI stream event");
   }
-  if (!value || typeof value !== "object") throw new Error("Invalid FreeAI stream event");
+  if (!value || typeof value !== "object") throw new Error("Invalid PrimeAI stream event");
   const event = value as Record<string, unknown>;
-  if (event.type !== name) throw new Error("Invalid FreeAI stream event");
+  if (event.type !== name) throw new Error("Invalid PrimeAI stream event");
   if (name === "text" || name === "thinking") {
-    if (typeof event.delta !== "string") throw new Error("Invalid FreeAI stream delta");
+    if (typeof event.delta !== "string") throw new Error("Invalid PrimeAI stream delta");
   } else if (name === "tool_call") {
     const call = event.call;
-    if (!call || typeof call !== "object") throw new Error("Invalid FreeAI tool call");
+    if (!call || typeof call !== "object") throw new Error("Invalid PrimeAI tool call");
     const toolCall = call as Record<string, unknown>;
-    if (typeof toolCall.id !== "string" || typeof toolCall.name !== "string" || typeof toolCall.argumentsJson !== "string") throw new Error("Invalid FreeAI tool call");
+    if (typeof toolCall.id !== "string" || typeof toolCall.name !== "string" || typeof toolCall.argumentsJson !== "string") throw new Error("Invalid PrimeAI tool call");
     try {
       JSON.parse(toolCall.argumentsJson);
     } catch {
-      throw new Error("Invalid FreeAI tool argumentsJson");
+      throw new Error("Invalid PrimeAI tool argumentsJson");
     }
   } else if (name === "route") {
-    if (typeof event.providerName !== "string" || typeof event.modelId !== "string" || typeof event.substituted !== "boolean") throw new Error("Invalid FreeAI route event");
+    if (typeof event.providerName !== "string" || typeof event.modelId !== "string" || typeof event.substituted !== "boolean") throw new Error("Invalid PrimeAI route event");
   } else if (name === "error") {
-    if (typeof event.code !== "string" || typeof event.retryable !== "boolean") throw new Error("Invalid FreeAI error event");
+    if (typeof event.code !== "string" || typeof event.retryable !== "boolean") throw new Error("Invalid PrimeAI error event");
   } else if (name !== "done") {
-    throw new Error("Unknown FreeAI stream event");
+    throw new Error("Unknown PrimeAI stream event");
   }
   return event as unknown as RouterEvent;
 }
@@ -54,5 +54,5 @@ export async function* parseSse(body: ReadableStream<Uint8Array>): AsyncIterable
   }
   buffer += decoder.decode();
   buffer = buffer.replace(/\r\n/g, "\n");
-  if (buffer.trim()) throw new Error("Incomplete FreeAI stream");
+  if (buffer.trim()) throw new Error("Incomplete PrimeAI stream");
 }

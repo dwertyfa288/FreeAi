@@ -34,7 +34,7 @@ export class PluginStateStore {
       };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return { selectedModelId: "", imageModelId: "", videoModelId: "", strictModel: false };
-      throw new Error("FreeAI state is invalid");
+      throw new Error("PrimeAI state is invalid");
     }
   }
 
